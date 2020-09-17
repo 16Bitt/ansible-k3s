@@ -1,0 +1,9 @@
+[Unit]
+Description=Launch k3s master node
+After=time-sync.target network.target
+
+[Service]
+ExecStart=/usr/local/bin/k3s-armhf server
+
+[Install]
+WantedBy=multi-user.target

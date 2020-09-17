@@ -1,0 +1,9 @@
+[Unit]
+Description=Launch k3s worker node
+After=time-sync.target network.target
+
+[Service]
+ExecStart=/usr/local/bin/k3s-armhf agent --token-file /var/lib/tokens/master-node-token --server https://centos-a:6443
+
+[Install]
+WantedBy=multi-user.target

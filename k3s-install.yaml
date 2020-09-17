@@ -1,0 +1,74 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+  - name: "Get current URI of release"
+    uri: 
+      url: https://github.com/rancher/k3s/releases/download/v1.17.11%2Bk3s1/k3s-armhf
+      follow_redirects: "no"
+      headers:
+        Accept: application/octet-stream
+      status_code:
+      - 302
+    register: k3s_uri
+
+  - name: "Install k3s binary"
+    get_url:
+      url: "{{ k3s_uri.location }}"
+      dest: /usr/local/bin/k3s-armhf
+      follow: True
+      mode: 0755
+      checksum: "sha256:d06b17248ee2d0497f531bd8131a7828efa5f90103f983ea099c151d68d3e61e"
+
+  - name: "Install master service"
+    copy:
+      src: ./systemd/k3s-master.service
+      dest: /etc/systemd/system/k3s-master.service
+      mode: 0664
+  
+  - name: "Install worker service"
+    copy:
+      src: ./systemd/k3s-worker.service
+      dest: /etc/systemd/system/k3s-worker.service
+      mode: 0664
+
+  - name: "Start master node"
+    service:
+      name: k3s-master
+      state: started
+      enabled: yes
+    when: "inventory_hostname == 'ca@centos-a'"
+
+  - name: "Get kubecfg"
+    fetch:
+      src: /etc/rancher/k3s/k3s.yaml
+      dest: ./kubecfg
+      flat: yes
+    when: "inventory_hostname == 'ca@centos-a'"
+
+  - name: "Get tokenfile"
+    fetch:
+      src: /var/lib/rancher/k3s/server/node-token
+      dest: ./node-token
+      flat: yes
+    when: "inventory_hostname == 'ca@centos-a'"
+
+  - name: "Make worker token directory"
+    file:
+      path: /var/lib/tokens
+      state: directory
+      owner: root
+    when: "inventory_hostname != 'ca@centos-a'"
+    
+  - name: "Copy token file to worker nodes"
+    copy:
+      src: ./node-token
+      dest: /var/lib/tokens/master-node-token
+    when: "inventory_hostname != 'ca@centos-a'"
+
+  - name: "Start worker nodes"
+    service:
+      name: k3s-worker
+      state: started
+      enabled: yes
+    when: "inventory_hostname != 'ca@centos-a'"

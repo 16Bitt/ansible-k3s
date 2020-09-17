@@ -1,0 +1,14 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+  - name: Enable docker
+    service:
+      name: docker
+      state: started
+      enabled: yes
+  - name: Disable firewalld
+    service:
+      name: firewalld
+      state: stopped
+      enabled: no

@@ -1,0 +1,23 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+  - name: "Install base packages"
+    yum:
+      name:
+      - vim
+      - git
+      - yum-utils
+      state: present
+  - name: "Install docker"
+    yum:
+      name:
+      - docker
+      state: present
+  - name: "Disable selinux"
+    command: "sed -i 's/enforcing/disabled/g' /etc/selinux/config"
+  - name: "Update cmdline.txt for cgroup support"
+    copy:
+      src: ./boot/cmdline.txt
+      dest: /boot/cmdline.txt
+      mode: 0755

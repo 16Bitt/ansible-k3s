@@ -1,0 +1,13 @@
+---
+- hosts: all
+  tasks:
+  - name: "Create docker group"
+    become: yes
+    command: "groupadd docker"
+  - name: "Add ca to docker group"
+    become: yes
+    command: "gpasswd -a ca docker"
+  - name: "Reboot"
+    become: yes
+    command: "reboot"
+
